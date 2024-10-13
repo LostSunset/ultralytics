@@ -57,7 +57,8 @@ class BaseSolution:
             self.clss = self.track_data.cls.cpu().tolist()
             self.track_ids = self.track_data.id.int().cpu().tolist()
         else:
-            LOGGER.warning("WARNING ⚠️ tracks none, no keypoints will be considered.")
+            LOGGER.warning("WARNING ⚠️ no tracks found!")
+            self.boxes, self.clss, self.track_ids = [], [], []
 
     def store_tracking_history(self, track_id, box):
         """
@@ -75,9 +76,11 @@ class BaseSolution:
 
     def initialize_region(self):
         """Initialize the counting region and line segment based on config."""
-        self.region = [(20, 400), (1260, 400)] if self.region is None else self.region
-        self.r_s = Polygon(self.region) if len(self.region) >= 3 else LineString(self.region)
-        self.l_s = LineString([(self.region[0][0], self.region[0][1]), (self.region[1][0], self.region[1][1])])
+        self.region = [(20, 400), (1080, 404), (1080, 360), (20, 360)] if self.region is None else self.region
+        self.r_s = Polygon(self.region) if len(self.region) >= 3 else LineString(self.region)  # region segment
+        self.l_s = LineString(
+            [(self.region[0][0], self.region[0][1]), (self.region[1][0], self.region[1][1])]
+        )  # line segment
 
     def display_output(self, im0):
         """
