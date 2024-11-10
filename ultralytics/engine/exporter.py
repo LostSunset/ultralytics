@@ -226,6 +226,8 @@ class Exporter:
         if self.args.optimize:
             assert not ncnn, "optimize=True not compatible with format='ncnn', i.e. use optimize=False"
             assert self.device.type == "cpu", "optimize=True not compatible with cuda devices, i.e. use device='cpu'"
+        if self.args.int8 and tflite:
+            assert not getattr(model, "end2end", False), "TFLite INT8 export not supported for end2end models."
         if edgetpu:
             if not LINUX:
                 raise SystemError("Edge TPU export only supported on Linux. See https://coral.ai/docs/edgetpu/compiler")
@@ -566,8 +568,7 @@ class Exporter:
         f = str(self.file.with_suffix(".mnn"))  # MNN model file
         args = ["", "-f", "ONNX", "--modelFile", f_onnx, "--MNNModel", f, "--bizCode", json.dumps(self.metadata)]
         if self.args.int8:
-            args.append("--weightQuantBits")
-            args.append("8")
+            args.extend(("--weightQuantBits", "8"))
         if self.args.half:
             args.append("--fp16")
         mnnconvert.convert(args)
@@ -791,7 +792,7 @@ class Exporter:
                 LOGGER.warning(f"{prefix} WARNING ⚠️ 'dynamic=True' model requires max batch size, i.e. 'batch=16'")
             profile = builder.create_optimization_profile()
             min_shape = (1, shape[1], 32, 32)  # minimum input shape
-            max_shape = (*shape[:2], *(max(1, self.args.workspace) * d for d in shape[2:]))  # max input shape
+            max_shape = (*shape[:2], *(int(max(1, self.args.workspace) * d) for d in shape[2:]))  # max input shape
             for inp in inputs:
                 profile.set_shape(inp.name, min=min_shape, opt=shape, max=max_shape)
             config.add_optimization_profile(profile)
