@@ -74,7 +74,7 @@ MODELS = {TASK2MODEL[task] for task in TASKS}
 
 ARGV = sys.argv or ["", ""]  # sometimes sys.argv = []
 SOLUTIONS_HELP_MSG = f"""
-    Arguments received: {str(['yolo'] + ARGV[1:])}. Ultralytics 'yolo solutions' usage overview:
+    Arguments received: {str(["yolo"] + ARGV[1:])}. Ultralytics 'yolo solutions' usage overview:
 
         yolo solutions SOLUTION ARGS
 
@@ -104,7 +104,7 @@ SOLUTIONS_HELP_MSG = f"""
         yolo streamlit-predict
     """
 CLI_HELP_MSG = f"""
-    Arguments received: {str(['yolo'] + ARGV[1:])}. Ultralytics 'yolo' commands use the following syntax:
+    Arguments received: {str(["yolo"] + ARGV[1:])}. Ultralytics 'yolo' commands use the following syntax:
 
         yolo TASK MODE ARGS
 
@@ -359,11 +359,11 @@ def check_cfg(cfg, hard=True):
                         )
                     cfg[k] = v = float(v)
                 if not (0.0 <= v <= 1.0):
-                    raise ValueError(f"'{k}={v}' is an invalid value. " f"Valid '{k}' values are between 0.0 and 1.0.")
+                    raise ValueError(f"'{k}={v}' is an invalid value. Valid '{k}' values are between 0.0 and 1.0.")
             elif k in CFG_INT_KEYS and not isinstance(v, int):
                 if hard:
                     raise TypeError(
-                        f"'{k}={v}' is of invalid type {type(v).__name__}. " f"'{k}' must be an int (i.e. '{k}=8')"
+                        f"'{k}={v}' is of invalid type {type(v).__name__}. '{k}' must be an int (i.e. '{k}=8')"
                     )
                 cfg[k] = int(v)
             elif k in CFG_BOOL_KEYS and not isinstance(v, bool):
@@ -473,8 +473,7 @@ def check_dict_alignment(base: Dict, custom: Dict, e=None):
     """
     custom = _handle_deprecation(custom)
     base_keys, custom_keys = (set(x.keys()) for x in (base, custom))
-    mismatched = [k for k in custom_keys if k not in base_keys]
-    if mismatched:
+    if mismatched := [k for k in custom_keys if k not in base_keys]:
         from difflib import get_close_matches
 
         string = ""
