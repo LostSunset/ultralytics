@@ -1,4 +1,4 @@
-# Ultralytics YOLO 🚀, AGPL-3.0 license
+# Ultralytics 🚀 AGPL-3.0 License - https://ultralytics.com/license
 
 import contextlib
 import importlib.metadata
@@ -1243,7 +1243,7 @@ class SettingsManager(JSONDict):
         """Updates settings, validating keys and types."""
         for arg in args:
             if isinstance(arg, dict):
-                kwargs |= arg
+                kwargs.update(arg)
         for k, v in kwargs.items():
             if k not in self.defaults:
                 raise KeyError(f"No Ultralytics setting '{k}'. {self.help_msg}")
