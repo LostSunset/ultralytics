@@ -20,7 +20,7 @@ class PoseValidator(DetectionValidator):
         ```python
         from ultralytics.models.yolo.pose import PoseValidator
 
-        args = dict(model="yolov8n-pose.pt", data="coco8-pose.yaml")
+        args = dict(model="yolo11n-pose.pt", data="coco8-pose.yaml")
         validator = PoseValidator(args=args)
         validator()
         ```
@@ -59,19 +59,6 @@ class PoseValidator(DetectionValidator):
             "R",
             "mAP50",
             "mAP50-95)",
-        )
-
-    def postprocess(self, preds):
-        """Apply non-maximum suppression and return detections with high confidence scores."""
-        return ops.non_max_suppression(
-            preds,
-            self.args.conf,
-            self.args.iou,
-            labels=self.lb,
-            multi_label=True,
-            agnostic=self.args.single_cls or self.args.agnostic_nms,
-            max_det=self.args.max_det,
-            nc=self.nc,
         )
 
     def init_metrics(self, model):

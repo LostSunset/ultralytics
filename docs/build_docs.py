@@ -37,6 +37,7 @@ from tqdm import tqdm
 os.environ["JUPYTER_PLATFORM_DIRS"] = "1"  # fix DeprecationWarning: Jupyter is migrating to use standard platformdirs
 DOCS = Path(__file__).parent.resolve()
 SITE = DOCS.parent / "site"
+LINK_PATTERN = re.compile(r"(https?://[^\s()<>]*[^\s()<>.,:;!?\'\"])")
 
 
 def create_vercel_config():
@@ -72,7 +73,6 @@ def prepare_docs_markdown(clone_repos=True):
 
 def update_page_title(file_path: Path, new_title: str):
     """Update the title of an HTML file."""
-    # Read the content of the file
     with open(file_path, encoding="utf-8") as file:
         content = file.read()
 
@@ -206,11 +206,7 @@ def convert_plaintext_links_to_html(content):
     for paragraph in main_content.find_all(["p", "li"]):  # Focus on paragraphs and list items
         for text_node in paragraph.find_all(string=True, recursive=False):
             if text_node.parent.name not in {"a", "code"}:  # Ignore links and code blocks
-                new_text = re.sub(
-                    r"(https?://[^\s()<>]*[^\s()<>.,:;!?\'\"])",
-                    r'<a href="\1">\1</a>',
-                    str(text_node),
-                )
+                new_text = LINK_PATTERN.sub(r'<a href="\1">\1</a>', str(text_node))
                 if "<a href=" in new_text:
                     # Parse the new text with BeautifulSoup to handle HTML properly
                     new_soup = BeautifulSoup(new_text, "html.parser")
@@ -246,6 +242,29 @@ def remove_macros():
     print(f"Removed {len(macros_indices)} URLs containing '/macros/' from {sitemap}")
 
 
+def remove_comments_and_empty_lines(content, file_type):
+    """Removes comments and empty lines from a string of code, preserving newlines and URLs."""
+    if file_type == "html":
+        # Remove HTML comments, preserving newline after comment
+        # content = re.sub(r"<!--(.*?)-->\n?", r"\n", content, flags=re.DOTALL)
+        pass
+    elif file_type == "css":
+        # Remove CSS comments, preserving newline after comment
+        # content = re.sub(r"/\*.*?\*/\n?", r"\n", content, flags=re.DOTALL)
+        pass
+    elif file_type == "js":
+        # Remove JS single-line comments, preserving newline and URLs
+        # content = re.sub(r"(?<!:)//(.*?)\n", r"\n", content, flags=re.DOTALL)
+        # Remove JS multi-line comments, preserving newline after comment
+        # content = re.sub(r"/\*.*?\*/\n?", r"\n", content, flags=re.DOTALL)
+        pass
+
+    # Remove empty lines
+    content = re.sub(r"^\s*\n", "", content, flags=re.MULTILINE)
+
+    return content
+
+
 def minify_files(html=True, css=True, js=True):
     """Minifies HTML, CSS, and JS files and prints total reduction stats."""
     minify, compress, jsmin = None, None, None
@@ -266,14 +285,11 @@ def minify_files(html=True, css=True, js=True):
         "css": compress if css else None,
         "js": jsmin.jsmin if js else None,
     }.items():
-        if not minifier:
-            continue
-
         stats[ext] = {"original": 0, "minified": 0}
         directory = ""  # "stylesheets" if ext == css else "javascript" if ext == "js" else ""
         for f in tqdm((SITE / directory).rglob(f"*.{ext}"), desc=f"Minifying {ext.upper()}"):
             content = f.read_text(encoding="utf-8")
-            minified = minifier(content)
+            minified = minifier(content) if minifier else remove_comments_and_empty_lines(content, ext)
             stats[ext]["original"] += len(content)
             stats[ext]["minified"] += len(minified)
             f.write_text(minified, encoding="utf-8")

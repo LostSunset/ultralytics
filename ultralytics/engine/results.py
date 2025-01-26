@@ -305,7 +305,7 @@ class Results(SimpleClass):
             if v is not None:
                 return len(v)
 
-    def update(self, boxes=None, masks=None, probs=None, obb=None):
+    def update(self, boxes=None, masks=None, probs=None, obb=None, keypoints=None):
         """
         Updates the Results object with new detection data.
 
@@ -318,6 +318,7 @@ class Results(SimpleClass):
             masks (torch.Tensor | None): A tensor of shape (N, H, W) containing segmentation masks.
             probs (torch.Tensor | None): A tensor of shape (num_classes,) containing class probabilities.
             obb (torch.Tensor | None): A tensor of shape (N, 5) containing oriented bounding box coordinates.
+            keypoints (torch.Tensor | None): A tensor of shape (N, 17, 3) containing keypoints.
 
         Examples:
             >>> results = model("image.jpg")
@@ -332,6 +333,8 @@ class Results(SimpleClass):
             self.probs = probs
         if obb is not None:
             self.obb = OBB(obb, self.orig_shape)
+        if keypoints is not None:
+            self.keypoints = Keypoints(keypoints, self.orig_shape)
 
     def _apply(self, fn, *args, **kwargs):
         """
@@ -1718,7 +1721,7 @@ class OBB(BaseTensor):
         Examples:
             >>> import torch
             >>> from ultralytics import YOLO
-            >>> model = YOLO("yolov8n-obb.pt")
+            >>> model = YOLO("yolo11n-obb.pt")
             >>> results = model("path/to/image.jpg")
             >>> for result in results:
             ...     obb = result.obb
